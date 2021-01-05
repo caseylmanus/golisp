@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -58,4 +59,44 @@ func ParseExpression(expression string) (Expression, error) {
 		}
 	}
 	return result, nil
+}
+func (exp Expression) Eval() (Symbol, error) {
+	return apply(exp.Operator, exp.Args...)
+}
+
+type OperatorFunc func(rgs ...Symbol) (Symbol, error)
+
+func apply(operator Symbol, atoms ...Atom) (Symbol, error) {
+	funcs := map[Symbol]OperatorFunc{
+		"+": func(args ...Symbol) (Symbol, error) {
+			var total float64
+			for _, i := range args {
+
+				v, err := strconv.ParseFloat(string(i), 10)
+				if err != nil {
+					return "", err
+				}
+				total = total + v
+			}
+			return Symbol(fmt.Sprint(total)), nil
+		},
+	}
+	f, ok := funcs[operator]
+	if !ok {
+		return "", fmt.Errorf("Unknown Operator %s", operator)
+	}
+	var args []Symbol
+	for _, atom := range atoms {
+		if atom.Symbol != nil {
+			args = append(args, *atom.Symbol)
+		} else if atom.Expression != nil {
+			v, err := atom.Expression.Eval()
+			if err != nil {
+				return "", err
+			}
+			args = append(args, v)
+		}
+
+	}
+	return f(args...)
 }
