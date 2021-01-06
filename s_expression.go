@@ -78,7 +78,19 @@ func apply(operator Symbol, atoms ...Atom) (Symbol, error) {
 				}
 				total = total + v
 			}
-			return Symbol(fmt.Sprint(total)), nil
+			return Symbol(fmt.Sprintf("%f", total)), nil
+		},
+		"*": func(args ...Symbol) (Symbol, error) {
+			var total float64 = 1
+			for _, i := range args {
+
+				v, err := strconv.ParseFloat(string(i), 10)
+				if err != nil {
+					return "", err
+				}
+				total = total * v
+			}
+			return Symbol(fmt.Sprintf("%f", total)), nil
 		},
 	}
 	f, ok := funcs[operator]

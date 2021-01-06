@@ -1,19 +1,27 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 )
 
 func main() {
-	exp, err := ParseExpression("(+ 3 5 (+ 3 3 9999) (+ 8 -998) (+ 88 999))")
-	if err != nil {
-		log.Fatal(err)
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+
+		exp, err := ParseExpression(scanner.Text())
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		v, err := exp.Eval()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		fmt.Println(v)
 	}
-	v, err := exp.Eval()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(v)
 
 }
