@@ -14,6 +14,12 @@ Multiply: (* 2 3)
 
 // Symbol represents a symbol in the code
 type Symbol string
+type Number float64
+
+func (s Symbol) Number() Number {
+	i, _ := strconv.ParseFloat(string(s), 10)
+	return Number(i)
+}
 
 // Expression represents and s-expression
 type Expression struct {
@@ -60,38 +66,17 @@ func ParseExpression(expression string) (Expression, error) {
 	}
 	return result, nil
 }
-func (exp Expression) Eval() (Symbol, error) {
+func (exp Expression) Eval() (interface{}, error) {
 	return apply(exp.Operator, exp.Args...)
 }
 
-type OperatorFunc func(rgs ...Symbol) (Symbol, error)
+type OperatorFunc func(rgs ...Symbol) (interface{}, error)
 
-func apply(operator Symbol, atoms ...Atom) (Symbol, error) {
+func apply(operator Symbol, atoms ...Atom) (interface{}, error) {
 	funcs := map[Symbol]OperatorFunc{
-		"+": func(args ...Symbol) (Symbol, error) {
-			var total float64
-			for _, i := range args {
-
-				v, err := strconv.ParseFloat(string(i), 10)
-				if err != nil {
-					return "", err
-				}
-				total = total + v
-			}
-			return Symbol(fmt.Sprintf("%f", total)), nil
-		},
-		"*": func(args ...Symbol) (Symbol, error) {
-			var total float64 = 1
-			for _, i := range args {
-
-				v, err := strconv.ParseFloat(string(i), 10)
-				if err != nil {
-					return "", err
-				}
-				total = total * v
-			}
-			return Symbol(fmt.Sprintf("%f", total)), nil
-		},
+		"+": AddOperator,
+		"*": MultiplyOperator,
+		"-": SubtractOperator,
 	}
 	f, ok := funcs[operator]
 	if !ok {
@@ -106,9 +91,8 @@ func apply(operator Symbol, atoms ...Atom) (Symbol, error) {
 			if err != nil {
 				return "", err
 			}
-			args = append(args, v)
+			args = append(args, Symbol(fmt.Sprint(v)))
 		}
-
 	}
 	return f(args...)
 }
